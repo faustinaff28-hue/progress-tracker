@@ -22,7 +22,6 @@ class UserResponse(UserBase):
     created_at: datetime
 
     class Config:
-        orm_mode = True
         from_attributes = True
 
 # --- AUTH ---
@@ -51,7 +50,6 @@ class TaskSubmissionResponse(TaskSubmissionBase):
     submitted_at: datetime
     
     class Config:
-        orm_mode = True
         from_attributes = True
 
 # --- TASK ---
@@ -83,5 +81,4 @@ class TaskResponse(TaskBase):
     submissions: List[TaskSubmissionResponse] = []
 
     class Config:
-        orm_mode = True
         from_attributes = True
