@@ -1,11 +1,12 @@
 import { create } from 'zustand';
 import api from '../services/api';
+import { getErrorMessage } from '../utils/apiError';
 
 const useAuthStore = create((set) => ({
   user: null,
   token: localStorage.getItem('access_token'),
   isAuthenticated: !!localStorage.getItem('access_token'),
-  isLoading: false,
+  isLoading: !!localStorage.getItem('access_token'),
 
   login: async (username, password) => {
     set({ isLoading: true });
@@ -34,11 +35,13 @@ const useAuthStore = create((set) => ({
         isAuthenticated: true, 
         isLoading: false 
       });
-      return true;
+      return { success: true };
     } catch (error) {
       set({ isLoading: false });
-      console.error("Login failed:", error);
-      return false;
+      return {
+        success: false,
+        message: getErrorMessage(error, 'Invalid username or password'),
+      };
     }
   },
 
@@ -49,13 +52,16 @@ const useAuthStore = create((set) => ({
 
   checkAuth: async () => {
     const token = localStorage.getItem('access_token');
-    if (!token) return;
+    if (!token) {
+      set({ isLoading: false });
+      return;
+    }
 
     set({ isLoading: true });
     try {
       const response = await api.get('/auth/me');
       set({ user: response.data, isAuthenticated: true, isLoading: false });
-    } catch (error) {
+    } catch {
       localStorage.removeItem('access_token');
       set({ user: null, token: null, isAuthenticated: false, isLoading: false });
     }

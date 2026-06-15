@@ -1,5 +1,5 @@
 from typing import Optional, Annotated
-from datetime import datetime
+from datetime import datetime, date
 from beanie import Document
 from beanie import Indexed
 from pydantic import Field
@@ -18,6 +18,7 @@ class User(Document):
     streak: int = 0
     contribution_score: int = 0
     profile_image: Optional[str] = None
+    last_login_date: Optional[date] = None
     created_at: datetime = Field(default_factory=get_utc_now)
 
     class Settings:

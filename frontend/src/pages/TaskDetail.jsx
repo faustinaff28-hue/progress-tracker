@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { UploadCloud, CheckCircle, FileAudio } from 'lucide-react';
 import api from '../services/api';
+import { getErrorMessage } from '../utils/apiError';
 
 export default function TaskDetail() {
   const { id } = useParams();
@@ -10,14 +12,18 @@ export default function TaskDetail() {
   const [file, setFile] = useState(null);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingTask, setIsLoadingTask] = useState(true);
 
   useEffect(() => {
     const fetchTask = async () => {
+      setIsLoadingTask(true);
       try {
         const res = await api.get(`/tasks/${id}`);
         setTask(res.data);
       } catch (err) {
-        console.error("Failed to fetch task", err);
+        toast.error(getErrorMessage(err, 'Failed to load task'));
+      } finally {
+        setIsLoadingTask(false);
       }
     };
     fetchTask();
@@ -41,14 +47,16 @@ export default function TaskDetail() {
       setTask(res.data);
       setFile(null);
       setComment('');
+      toast.success('Task submitted for review');
     } catch (err) {
-      console.error("Submission failed", err);
+      toast.error(getErrorMessage(err, 'Failed to submit task'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!task) return <div className="p-8 text-white">Loading...</div>;
+  if (isLoadingTask) return <div className="p-8 text-white">Loading task...</div>;
+  if (!task) return <div className="p-8 text-red-400">Task not found or could not be loaded.</div>;
 
   return (
     <div className="p-8 max-w-4xl mx-auto">

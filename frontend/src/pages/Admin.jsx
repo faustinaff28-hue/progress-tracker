@@ -1,20 +1,28 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import api from '../services/api';
 import useAuthStore from '../store/useAuthStore';
-import { Mic, Square, Play, Upload } from 'lucide-react';
+import { getErrorMessage } from '../utils/apiError';
+import { Mic, Square } from 'lucide-react';
 
 export default function Admin() {
   const { user } = useAuthStore();
   const [users, setUsers] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  
+  const [submissions, setSubmissions] = useState([]);
+  const [submissionsLoading, setSubmissionsLoading] = useState(true);
+  const [reviewingId, setReviewingId] = useState(null);
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
+  const [usersLoading, setUsersLoading] = useState(true);
+
   // New Task Form State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
   const [priority, setPriority] = useState('medium');
-  
+  const [deadline, setDeadline] = useState('');
+
+
   // Voice Recording State
   const [isRecording, setIsRecording] = useState(false);
   const [audioURL, setAudioURL] = useState('');
@@ -22,16 +30,75 @@ export default function Admin() {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
 
+  const fetchSubmissions = async () => {
+    setSubmissionsLoading(true);
+    try {
+      const res = await api.get('/tasks/submissions/pending');
+      setSubmissions(res.data);
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to load submissions'));
+    } finally {
+      setSubmissionsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // We would fetch all users and all tasks here
-    // In a real app, you'd need an admin-only endpoint for this.
-    // For now, let's mock it or use an existing endpoint if it returns all users.
-    // Mocking for UI demonstration:
-    setUsers([
-      { id: 1, username: 'alice' },
-      { id: 2, username: 'bob' }
-    ]);
+    const fetchUsers = async () => {
+      setUsersLoading(true);
+      try {
+        const res = await api.get('/auth/users');
+        setUsers(res.data);
+      } catch (err) {
+        toast.error(getErrorMessage(err, 'Failed to load users'));
+      } finally {
+        setUsersLoading(false);
+      }
+    };
+    fetchUsers();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchSubmissions();
   }, []);
+
+  const formatSubmittedAt = (iso) => {
+    // eslint-disable-next-line react-hooks/purity
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    if (hours < 1) return 'just now';
+    if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+    const days = Math.floor(hours / 24);
+    return `${days} day${days === 1 ? '' : 's'} ago`;
+  };
+
+  const handleApprove = async (submissionId) => {
+    setReviewingId(submissionId);
+    try {
+      await api.post(`/tasks/submissions/${submissionId}/approve`);
+      setSubmissions((prev) => prev.filter((s) => s.id !== submissionId));
+      toast.success('Submission approved');
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to approve submission'));
+    } finally {
+      setReviewingId(null);
+    }
+  };
+
+  const handleReject = async (submissionId) => {
+    const feedback = window.prompt('Optional feedback for the submitter:');
+    if (feedback === null) return;
+
+    setReviewingId(submissionId);
+    try {
+      await api.post(`/tasks/submissions/${submissionId}/reject`, {
+        feedback: feedback || null,
+      });
+      setSubmissions((prev) => prev.filter((s) => s.id !== submissionId));
+      toast.success('Submission rejected');
+    } catch (err) {
+      toast.error(getErrorMessage(err, 'Failed to reject submission'));
+    } finally {
+      setReviewingId(null);
+    }
+  };
 
   const startRecording = async () => {
     try {
@@ -54,8 +121,8 @@ export default function Admin() {
 
       mediaRecorder.start();
       setIsRecording(true);
-    } catch (err) {
-      console.error("Error accessing microphone:", err);
+    } catch {
+      toast.error('Microphone access was denied or unavailable');
     }
   };
 
@@ -69,12 +136,14 @@ export default function Admin() {
 
   const handleCreateTask = async (e) => {
     e.preventDefault();
+    setIsCreatingTask(true);
     try {
       const taskRes = await api.post('/tasks', {
         title,
         description,
         priority,
-        assigned_to: parseInt(assignedTo) || null
+        assigned_to: assignedTo || null,
+        deadline: deadline || null
       });
 
       if (audioBlob) {
@@ -92,9 +161,13 @@ export default function Admin() {
       setAssignedTo('');
       setAudioBlob(null);
       setAudioURL('');
-      alert("Task assigned successfully!");
+      setPriority('medium');
+      setDeadline('');
+      toast.success('Task assigned successfully');
     } catch (err) {
-      console.error("Failed to create task", err);
+      toast.error(getErrorMessage(err, 'Failed to create task'));
+    } finally {
+      setIsCreatingTask(false);
     }
   };
 
@@ -145,7 +218,7 @@ export default function Admin() {
                   onChange={e => setAssignedTo(e.target.value)}
                   className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-neonBlue"
                 >
-                  <option value="">Select User...</option>
+                  <option value="">{usersLoading ? 'Loading users...' : 'Select User...'}</option>
                   {users.map(u => (
                     <option key={u.id} value={u.id}>{u.username}</option>
                   ))}
@@ -163,6 +236,16 @@ export default function Admin() {
                   <option value="high">High</option>
                 </select>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Deadline (optional)</label>
+              <input
+                type="datetime-local"
+                value={deadline}
+                onChange={e => setDeadline(e.target.value)}
+                className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-neonBlue"
+              />
             </div>
 
             <div>
@@ -194,28 +277,61 @@ export default function Admin() {
 
             <button
               type="submit"
-              className="w-full py-3 mt-4 rounded-lg bg-neonBlue text-black font-bold hover:bg-opacity-90 transition-opacity"
+              disabled={isCreatingTask}
+              className="w-full py-3 mt-4 rounded-lg bg-neonBlue text-black font-bold hover:bg-opacity-90 transition-opacity disabled:opacity-50"
             >
-              Create & Assign Task
+              {isCreatingTask ? 'Creating...' : 'Create & Assign Task'}
             </button>
           </form>
         </div>
 
         <div className="glass-panel p-6">
-          <h2 className="text-xl font-bold mb-6 text-white border-b border-white/10 pb-2">Recent Submissions (Mock)</h2>
+          <h2 className="text-xl font-bold mb-6 text-white border-b border-white/10 pb-2">Recent Submissions</h2>
           <div className="space-y-4">
-             {/* Mock Submissions for UI */}
-             <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-               <div className="flex justify-between items-start mb-2">
-                 <h4 className="font-semibold text-neonBlue">Update Dashboard UI</h4>
-                 <span className="text-xs bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded">Pending Review</span>
-               </div>
-               <p className="text-sm text-gray-400">Submitted by <strong>alice</strong> 2 hours ago</p>
-               <div className="mt-3 flex gap-2">
-                 <button className="px-3 py-1 bg-green-500/20 text-green-400 rounded text-sm hover:bg-green-500/40 transition-colors">Approve</button>
-                 <button className="px-3 py-1 bg-red-500/20 text-red-400 rounded text-sm hover:bg-red-500/40 transition-colors">Reject</button>
-               </div>
-             </div>
+            {submissionsLoading ? (
+              <p className="text-sm text-gray-500 text-center py-8">Loading submissions...</p>
+            ) : submissions.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-8">No pending submissions.</p>
+            ) : (
+              submissions.map((submission) => (
+                <div
+                  key={submission.id}
+                  className="p-4 bg-white/5 rounded-lg border border-white/10"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-semibold text-neonBlue">{submission.task_title}</h4>
+                    <span className="text-xs bg-yellow-500/20 text-yellow-500 px-2 py-1 rounded">
+                      Pending Review
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-400">
+                    Submitted by <strong>{submission.submitter_username}</strong>{' '}
+                    {formatSubmittedAt(submission.submitted_at)}
+                  </p>
+                  {submission.comment && (
+                    <p className="text-sm text-gray-500 mt-2">{submission.comment}</p>
+                  )}
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      disabled={reviewingId === submission.id}
+                      onClick={() => handleApprove(submission.id)}
+                      className="px-3 py-1 bg-green-500/20 text-green-400 rounded text-sm hover:bg-green-500/40 transition-colors disabled:opacity-50"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      type="button"
+                      disabled={reviewingId === submission.id}
+                      onClick={() => handleReject(submission.id)}
+                      className="px-3 py-1 bg-red-500/20 text-red-400 rounded text-sm hover:bg-red-500/40 transition-colors disabled:opacity-50"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

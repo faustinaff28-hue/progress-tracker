@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import Heatmap from '../components/Heatmap';
 import useAuthStore from '../store/useAuthStore';
 import api from '../services/api';
 import { Zap, Trophy, Target, Star } from 'lucide-react';
+
+import toast from 'react-hot-toast';
+import { getErrorMessage } from '../utils/apiError';
 
 export default function Analytics() {
   const { user } = useAuthStore();
@@ -21,13 +24,17 @@ export default function Analytics() {
     { name: 'Sun', completed: 5 },
   ];
 
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     const fetchHeatmap = async () => {
+      setLoading(true);
       try {
         const res = await api.get('/analytics/heatmap');
         setHeatmapData(res.data);
       } catch (err) {
-        console.error("Failed to fetch heatmap data", err);
+        toast.error(getErrorMessage(err, 'Failed to fetch heatmap data'));
+      } finally {
+        setLoading(false);
       }
     };
     fetchHeatmap();
@@ -37,6 +44,9 @@ export default function Analytics() {
 
   return (
     <div className="p-8">
+      {loading && (
+        <div className="mb-4 text-center text-gray-400">Loading analytics...</div>
+      )}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

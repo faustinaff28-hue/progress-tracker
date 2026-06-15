@@ -1,20 +1,27 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import api from '../services/api';
-import { Trophy, Medal, Award } from 'lucide-react';
+import { Trophy, Medal } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
+
+import toast from 'react-hot-toast';
+import { getErrorMessage } from '../utils/apiError';
 
 export default function Leaderboard() {
   const [leaders, setLeaders] = useState([]);
+  const [loading, setLoading] = useState(false);
   const { user: currentUser } = useAuthStore();
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
+      setLoading(true);
       try {
         const res = await api.get('/analytics/leaderboard');
         setLeaders(res.data);
       } catch (err) {
-        console.error("Failed to fetch leaderboard", err);
+        toast.error(getErrorMessage(err, 'Failed to fetch leaderboard'));
+      } finally {
+        setLoading(false);
       }
     };
     fetchLeaderboard();
@@ -31,6 +38,9 @@ export default function Leaderboard() {
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
+      {loading && (
+        <div className="mb-4 text-center text-gray-400">Loading leaderboard...</div>
+      )}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

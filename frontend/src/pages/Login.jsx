@@ -1,40 +1,55 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Activity } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
 import api from '../services/api';
+import { getErrorMessage } from '../utils/apiError';
 
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [email, setEmail] = useState(''); // For signup
-  const { login, isLoading } = useAuthStore();
+  const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const { login, isLoading } = useAuthStore();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
     if (isLogin) {
-      const success = await login(username, password);
-      if (!success) {
-        setError('Invalid credentials');
+      const result = await login(username, password);
+      if (!result.success) {
+        setError(result.message);
+        toast.error(result.message);
+      } else {
+        navigate('/dashboard');
       }
     } else {
       try {
         await api.post('/auth/signup', { username, email, password });
-        const success = await login(username, password);
-        if (!success) setError('Signup successful but login failed');
+        toast.success('Account created! Signing you in...');
+        const result = await login(username, password);
+        if (!result.success) {
+          const message = 'Account created, but sign-in failed. Please try logging in.';
+          setError(message);
+          toast.error(message);
+        } else {
+          navigate('/dashboard');
+        }
       } catch (err) {
-        setError(err.response?.data?.detail || 'Signup failed');
+        const message = getErrorMessage(err, 'Signup failed');
+        setError(message);
+        toast.error(message);
       }
     }
   };
 
   return (
     <div className="min-h-screen bg-dark flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Decorative background elements */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-neonBlue/10 rounded-full blur-[100px] pointer-events-none"></div>
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-neonPurple/10 rounded-full blur-[100px] pointer-events-none"></div>
 
@@ -70,7 +85,7 @@ export default function Login() {
               className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-neonBlue transition-colors"
             />
           </div>
-          
+
           {!isLogin && (
             <div>
               <label className="block text-sm text-gray-400 mb-1">Email</label>

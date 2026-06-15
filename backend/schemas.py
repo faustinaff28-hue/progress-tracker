@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 from typing import Optional, List
 from datetime import datetime
 
@@ -20,6 +20,11 @@ class UserResponse(UserBase):
     contribution_score: int
     profile_image: Optional[str]
     created_at: datetime
+
+    @field_validator('id', mode='before')
+    @classmethod
+    def convert_id(cls, v):
+        return str(v)
 
     class Config:
         from_attributes = True
@@ -51,6 +56,13 @@ class TaskSubmissionResponse(TaskSubmissionBase):
     
     class Config:
         from_attributes = True
+
+class AdminTaskSubmissionResponse(TaskSubmissionResponse):
+    task_title: str
+    submitter_username: str
+
+class SubmissionReviewUpdate(BaseModel):
+    feedback: Optional[str] = None
 
 # --- TASK ---
 class TaskBase(BaseModel):
