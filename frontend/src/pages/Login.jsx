@@ -7,14 +7,41 @@ import useAuthStore from '../store/useAuthStore';
 import api from '../services/api';
 import { getErrorMessage } from '../utils/apiError';
 
+// Returns { score: 0-3, label, color } for a given password string.
+function getPasswordStrength(pwd) {
+  if (pwd.length < 8) return { score: 0, label: 'Too Short', color: '#ef4444' };
+  let score = 0;
+  if (/[A-Z]/.test(pwd)) score++;
+  if (/[0-9]/.test(pwd)) score++;
+  if (/[^A-Za-z0-9]/.test(pwd)) score++;
+  if (score === 0) return { score: 1, label: 'Weak', color: '#f97316' };
+  if (score === 1) return { score: 2, label: 'Medium', color: '#eab308' };
+  return { score: 3, label: 'Strong', color: '#22c55e' };
+}
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const { login, isLoading } = useAuthStore();
   const navigate = useNavigate();
+
+  // Reset all fields and switch mode
+  const toggleMode = () => {
+    setIsLogin((prev) => !prev);
+    setUsername('');
+    setPassword('');
+    setConfirmPassword('');
+    setEmail('');
+    setError('');
+  };
+
+  const strength = !isLogin ? getPasswordStrength(password) : null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,6 +56,26 @@ export default function Login() {
         navigate('/dashboard');
       }
     } else {
+      // --- Client-side validation ---
+      if (!EMAIL_REGEX.test(email)) {
+        const message = 'Please enter a valid email address.';
+        setError(message);
+        toast.error(message);
+        return;
+      }
+      if (password.length < 8 || password.length > 12) {
+        const message = 'Password must be between 8 and 12 characters.';
+        setError(message);
+        toast.error(message);
+        return;
+      }
+      if (password !== confirmPassword) {
+        const message = 'Passwords do not match.';
+        setError(message);
+        toast.error(message);
+        return;
+      }
+
       try {
         await api.post('/auth/signup', { username, email, password });
         toast.success('Account created! Signing you in...');
@@ -108,7 +155,45 @@ export default function Login() {
               onChange={e => setPassword(e.target.value)}
               className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-neonBlue transition-colors"
             />
+
+            {/* Password strength meter — signup only */}
+            {!isLogin && password.length > 0 && strength && (
+              <div className="mt-2">
+                <div className="flex gap-1 mb-1">
+                  {[1, 2, 3].map((step) => (
+                    <div
+                      key={step}
+                      className="h-1.5 flex-1 rounded-full transition-all duration-300"
+                      style={{
+                        backgroundColor:
+                          strength.score >= step ? strength.color : 'rgba(255,255,255,0.1)',
+                      }}
+                    />
+                  ))}
+                </div>
+                <p className="text-xs" style={{ color: strength.color }}>
+                  {strength.label}
+                </p>
+              </div>
+            )}
           </div>
+
+          {/* Confirm Password — signup only */}
+          {!isLogin && (
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Confirm Password</label>
+              <input
+                type="password"
+                required
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-neonBlue transition-colors"
+              />
+              {confirmPassword.length > 0 && password !== confirmPassword && (
+                <p className="mt-1 text-xs text-red-400">Passwords do not match.</p>
+              )}
+            </div>
+          )}
 
           <button
             type="submit"
@@ -123,7 +208,7 @@ export default function Login() {
           {isLogin ? "Don't have an account? " : "Already have an account? "}
           <button
             type="button"
-            onClick={() => setIsLogin(!isLogin)}
+            onClick={toggleMode}
             className="text-neonBlue hover:underline"
           >
             {isLogin ? 'Sign up' : 'Sign in'}
