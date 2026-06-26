@@ -42,9 +42,7 @@ origins = [
     os.getenv("ALLOWED_ORIGINS", ""),
 ]
 origins = [o for o in origins if o] 
-git add backend/main.py
-git commit -m "fix: add Vercel URL to CORS origins"
-git push
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
