@@ -12,7 +12,7 @@ class TaskSubmissionCreate(TaskSubmissionBase):
 class TaskSubmissionResponse(TaskSubmissionBase):
     id: str
     user_id: str
-    file_path: Optional[str]
+    file_paths: List[str] = []
     status: str
     feedback: Optional[str]
     reviewed_by: Optional[str] = None

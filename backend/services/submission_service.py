@@ -130,7 +130,7 @@ async def submit_task(
     task_id: str,
     user_id: str,
     comment: Optional[str] = None,
-    file_path: Optional[str] = None
+    file_paths: List[str] = []
 ) -> schemas.TaskSubmissionResponse:
     """Creates a submission for a task and marks it as in_review."""
     db_task = await models.Task.get(task_id)
@@ -143,7 +143,7 @@ async def submit_task(
     submission = models.TaskSubmission(
         task_id=task_id,
         user_id=user_id,
-        file_path=file_path,
+        file_paths=file_paths,
         comment=comment,
         status="pending"
     )

@@ -137,17 +137,20 @@ async def upload_attachment(task_id: str, file: UploadFile = File(...), current_
 async def submit_task(
     task_id: str, 
     comment: str = Form(None), 
-    file: UploadFile = File(None), 
+    files: List[UploadFile] = File(None), 
     current_user: models.User = Depends(auth.get_current_active_user)
 ):
-    file_path = None
-    if file and file.filename:
-        validate_document_upload(file)
-        file_path = await upload_to_cloudinary(file, "document")
+    file_paths = []
+    if files:
+        for file in files:
+            if file and file.filename:
+                validate_document_upload(file)
+                uploaded_url = await upload_to_cloudinary(file, "document")
+                file_paths.append(uploaded_url)
             
     return await submission_service.submit_task(
         task_id=task_id,
         user_id=str(current_user.id),
         comment=comment,
-        file_path=file_path
+        file_paths=file_paths
     )

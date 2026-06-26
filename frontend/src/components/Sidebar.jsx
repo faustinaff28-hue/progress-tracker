@@ -13,13 +13,7 @@ export default function Sidebar() {
     { to: '/tasks', icon: CheckSquare, label: 'Tasks' },
     { to: '/analytics', icon: BarChart2, label: 'Analytics' },
     { to: '/leaderboard', icon: Trophy, label: 'Leaderboard' },
-    { to: '/profile', icon: UserCircle, label: 'Profile' },
   ];
-
-  const isAdminOrHOD = user && (user.role === 'hod' || user.is_president || user.is_vice_president);
-  if (isAdminOrHOD) {
-    links.push({ to: '/admin', icon: Shield, label: 'Admin' });
-  }
 
   const isExecutive = user && (user.is_president || user.is_vice_president);
   if (isExecutive) {
@@ -30,6 +24,13 @@ export default function Sidebar() {
   if (isHod) {
     links.push({ to: '/department-progress', icon: Building2, label: 'My Department' });
   }
+
+  const isAdminOrHOD = user && (user.role === 'hod' || user.is_president || user.is_vice_president);
+  if (isAdminOrHOD) {
+    links.push({ to: '/admin', icon: Shield, label: 'Admin' });
+  }
+
+  links.push({ to: '/profile', icon: UserCircle, label: 'Profile' });
 
   return (
     <>

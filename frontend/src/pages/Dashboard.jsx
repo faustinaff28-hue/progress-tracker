@@ -84,13 +84,7 @@ export default function Dashboard() {
             </div>
             <Target className="text-neonPurple" />
           </div>
-          {leaderboardTopPercent !== null ? (
-            <p className="text-xs text-neonPurple font-medium bg-neonPurple/10 px-2 py-1 rounded inline-block">
-              Top {leaderboardTopPercent}%
-            </p>
-          ) : (
-            <p className="text-xs text-gray-500">Keep going!</p>
-          )}
+          <p className="text-xs text-gray-500">Keep going!</p>
         </div>
 
         <div className="glass-panel p-6 border-t-2 border-neonGreen">

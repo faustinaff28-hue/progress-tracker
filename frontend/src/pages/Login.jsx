@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Activity } from 'lucide-react';
+import { Activity, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/useAuthStore';
@@ -20,6 +20,8 @@ export default function Login() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [departments, setDepartments] = useState([]);
   const [selectedDeptId, setSelectedDeptId] = useState('');
   const [requestedRole, setRequestedRole] = useState('member');
@@ -51,6 +53,7 @@ export default function Login() {
     setConfirmPassword('');
     setEmail('');
     setError('');
+    setEmailError('');
     setSelectedDeptId('');
     setRequestedRole('member');
   };
@@ -72,10 +75,9 @@ export default function Login() {
       }
     } else {
       // --- Client-side validation ---
-      if (!EMAIL_REGEX.test(email)) {
-        const message = 'Please enter a valid email address.';
-        setError(message);
-        toast.error(message);
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!emailRegex.test(email)) {
+        setEmailError('Please enter a valid email address.');
         return;
       }
       if (password.length < 8) {
@@ -204,12 +206,15 @@ export default function Login() {
                   type="text"
                   required
                   value={email}
-                  onChange={e => setEmail(e.target.value)}
+                  onChange={e => {
+                    setEmail(e.target.value);
+                    if (emailError) setEmailError('');
+                  }}
                   className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-neonBlue transition-colors"
                   placeholder="you@example.com"
                 />
-                {email.length > 0 && !EMAIL_REGEX.test(email) && (
-                  <p className="mt-1 text-xs text-red-400">Please enter a valid email address (e.g. name@gmail.com).</p>
+                {emailError && (
+                  <p className="mt-1 text-xs text-red-500">{emailError}</p>
                 )}
               </div>
 
@@ -250,14 +255,23 @@ export default function Login() {
 
           <div>
             <label className="block text-sm text-gray-400 mb-1">Password</label>
-            <input
-              type="password"
-              required
-              maxLength={12}
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-neonBlue transition-colors"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                maxLength={12}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-neonBlue transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white focus:outline-none"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
 
             {/* Password validation checklist — signup only */}
             {!isLogin && password.length > 0 && passwordRules && strength && (

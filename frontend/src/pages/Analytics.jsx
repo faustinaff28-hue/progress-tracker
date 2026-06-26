@@ -69,15 +69,7 @@ export default function Analytics() {
             <p className="text-2xl font-bold text-white">{user.streak}</p>
           </div>
         </div>
-        <div className="glass-panel p-6 flex items-center gap-4">
-          <div className="p-3 bg-yellow-500/10 rounded-xl text-yellow-500">
-            <Target size={24} />
-          </div>
-          <div>
-            <p className="text-sm text-gray-400">Day Streak</p>
-            <p className="text-2xl font-bold text-white">{user.streak}</p>
-          </div>
-        </div>
+
       </div>
 
       <div className="glass-panel p-6 border-neonGreen">

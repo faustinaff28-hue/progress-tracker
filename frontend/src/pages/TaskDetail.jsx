@@ -10,7 +10,7 @@ export default function TaskDetail() {
   const { id } = useParams();
   const [task, setTask] = useState(null);
   const [latestSubmission, setLatestSubmission] = useState(null);
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const [comment, setComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingTask, setIsLoadingTask] = useState(true);
@@ -46,7 +46,11 @@ export default function TaskDetail() {
     e.preventDefault();
     setIsSubmitting(true);
     const formData = new FormData();
-    if (file) formData.append('file', file);
+    if (files && files.length > 0) {
+      files.forEach((file) => {
+        formData.append('files', file);
+      });
+    }
     if (comment) formData.append('comment', comment);
 
     try {
@@ -58,7 +62,7 @@ export default function TaskDetail() {
       // Refresh task
       const res = await api.get(`/tasks/${id}`);
       setTask(res.data);
-      setFile(null);
+      setFiles([]);
       setComment('');
       toast.success('Task submitted for review');
     } catch (err) {
@@ -205,9 +209,13 @@ export default function TaskDetail() {
                     <p className="mb-2 text-sm text-gray-400">
                       <span className="font-semibold text-neonBlue">Click to upload</span> or drag and drop
                     </p>
-                    {file && <p className="text-sm text-neonGreen font-semibold">{file.name}</p>}
+                    {files.length > 0 && (
+                      <p className="text-sm text-neonGreen font-semibold">
+                        {files.length === 1 ? files[0].name : `${files.length} files selected: ${files.map(f => f.name).join(', ')}`}
+                      </p>
+                    )}
                   </div>
-                  <input type="file" className="hidden" onChange={(e) => setFile(e.target.files[0])} />
+                  <input type="file" className="hidden" multiple onChange={(e) => setFiles([...e.target.files])} />
                 </label>
               </div>
             </div>

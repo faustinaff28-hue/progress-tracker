@@ -23,7 +23,7 @@ class Task(Document):
 class TaskSubmission(Document):
     task_id: Annotated[str, Indexed()]  # stores Task's string ID
     user_id: Annotated[str, Indexed()]  # stores User's string ID
-    file_path: Optional[str] = None
+    file_paths: List[str] = []
     comment: Optional[str] = None
     status: str = "pending"  # pending, approved, rejected
     feedback: Optional[str] = None

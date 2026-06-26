@@ -54,7 +54,6 @@ export default function Profile() {
     { label: 'Total XP', value: user?.xp ?? 0, icon: Zap, color: 'text-neonBlue', bg: 'bg-neonBlue/10' },
     { label: 'Level', value: user?.level ?? 1, icon: Target, color: 'text-neonPurple', bg: 'bg-neonPurple/10' },
     { label: 'Day Streak', value: user?.streak ?? 0, icon: Activity, color: 'text-neonGreen', bg: 'bg-neonGreen/10' },
-    { label: 'Score', value: user?.contribution_score ?? 0, icon: Star, color: 'text-yellow-400', bg: 'bg-yellow-400/10' },
   ];
 
   return (
