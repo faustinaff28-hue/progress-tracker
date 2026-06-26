@@ -1,11 +1,12 @@
 from fastapi import FastAPI
+import os
 from fastapi.middleware.cors import CORSMiddleware
 from beanie import init_beanie
 from core.database import db
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-import models
+import model
 from routers import auth, tasks, analytics, departments
 
 app = FastAPI(
@@ -34,14 +35,16 @@ async def startup_event():
 
 # Configure CORS for the React frontend
 origins = [
-    "http://localhost:5173",    # Default Vite port
-    "http://127.0.0.1:5173",   # IPv4 Vite port
-    "http://[::1]:5173",        # IPv6 Vite port
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
     "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://[::1]:3000",        # IPv6 port 3000
+    "https://progress-tracker-tau-two.vercel.app",
+    os.getenv("ALLOWED_ORIGINS", ""),
 ]
-
+origins = [o for o in origins if o] 
+git add backend/main.py
+git commit -m "fix: add Vercel URL to CORS origins"
+git push
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
