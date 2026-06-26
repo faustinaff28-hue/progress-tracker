@@ -10,3 +10,4 @@ beanie>=1.26.0
 python-dotenv==1.0.0
 cloudinary==1.41.0
 slowapi>=0.1.9
+email-validator>=2.0.0
