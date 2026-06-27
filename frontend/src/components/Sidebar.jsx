@@ -1,8 +1,8 @@
-
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, CheckSquare, BarChart2, Trophy, Shield, LogOut, Menu, UserCircle, Building2 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
+import logo from '../assets/logo.png';
 
 export default function Sidebar() {
   const { user, logout } = useAuthStore();
@@ -34,7 +34,6 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Hamburger button — mobile only */}
       <button
         onClick={() => setIsOpen(true)}
         className="fixed top-4 left-4 z-50 flex md:hidden items-center justify-center w-10 h-10 rounded-lg bg-white/10 backdrop-blur border border-white/10 text-white hover:bg-white/20 transition-colors"
@@ -43,7 +42,6 @@ export default function Sidebar() {
         <Menu size={20} />
       </button>
 
-      {/* Dark overlay — mobile only, visible when isOpen */}
       {isOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
@@ -51,7 +49,6 @@ export default function Sidebar() {
         />
       )}
 
-      {/* Sidebar panel */}
       <div
         className={`
           w-64 glass-panel border-r-0 border-l-0 border-t-0 border-b-0 rounded-none h-screen
@@ -62,8 +59,8 @@ export default function Sidebar() {
         `}
       >
         <div className="p-6 border-b border-white/10">
-  <img src="/logo.png" alt="Beetle Logo" className="w-36 h-auto" />
-</div>
+          <img src={logo} alt="Beetle Logo" className="w-36 h-auto" />
+        </div>
 
         <div className="flex-1 py-6 px-4 space-y-2">
           {links.map((link) => (
