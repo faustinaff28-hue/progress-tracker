@@ -62,11 +62,8 @@ export default function Sidebar() {
         `}
       >
         <div className="p-6 border-b border-white/10">
-          <h2 className="text-2xl font-bold text-[#9AD872]">
-            ProTrack
-          </h2>
-          <p className="text-xs text-gray-500 mt-0.5">Progress Made Visible.</p>
-        </div>
+  <img src="/logo.png" alt="Beetle Logo" className="w-36 h-auto" />
+</div>
 
         <div className="flex-1 py-6 px-4 space-y-2">
           {links.map((link) => (
