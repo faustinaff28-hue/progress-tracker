@@ -1,3 +1,5 @@
+import logo from '../assets/logo.png';
+
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, CheckSquare, BarChart2, Trophy, Shield, LogOut, Menu, UserCircle, Building2 } from 'lucide-react';
