@@ -35,11 +35,11 @@ async def startup_event():
 
 # Configure CORS for the React frontend
 origins = [
+   origins = [
     "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:3000",
-    "https://progress-tracker-tau-two.vercel.app",
-    os.getenv("ALLOWED_ORIGINS", ""),
+    "https://esjec-progress-tracker.vercel.app",
+    "https://progress-tracker-41ya772ca-faustinaff28-hues-projects.vercel.app",
+]
 ]
 origins = [o for o in origins if o] 
 
