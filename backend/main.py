@@ -33,15 +33,12 @@ async def startup_event():
         ]
     )
 
-# Configure CORS for the React frontend
 origins = [
-   origins = [
     "http://localhost:5173",
     "https://esjec-progress-tracker.vercel.app",
+    "https://progress-tracker-sandy-two.vercel.app",
     "https://progress-tracker-41ya772ca-faustinaff28-hues-projects.vercel.app",
 ]
-]
-origins = [o for o in origins if o] 
 
 app.add_middleware(
     CORSMiddleware,
@@ -51,7 +48,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include Routers
 app.include_router(auth.router)
 app.include_router(tasks.router)
 app.include_router(analytics.router)
