@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, CheckSquare, BarChart2, Trophy, Shield, LogOut, Menu, UserCircle, Building2 } from 'lucide-react';
 import useAuthStore from '../store/useAuthStore';
-import logo from '../assets/logo.png';
 
 export default function Sidebar() {
   const { user, logout } = useAuthStore();
@@ -58,9 +57,7 @@ export default function Sidebar() {
           md:translate-x-0 md:flex
         `}
       >
-        <div className="p-6 border-b border-white/10">
-          <img src={logo} alt="Beetle Logo" className="w-36 h-auto" />
-        </div>
+        {/* Logo container has been removed from here to clean up the top of the sidebar */}
 
         <div className="flex-1 py-6 px-4 space-y-2">
           {links.map((link) => (
